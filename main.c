@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-int solutionEquation ( const double a, const double b,const double c, double *x1, double *x2)
+int solutionEquation ( const double a, const double b,const double c, double *x1, double *x2) // уравнение вида ax^2 + bx + c = 0; корни x1 и х2
 {
     if (x1 == NULL || x2 == NULL || x1 == x2) return 0;
     if (!isfinite(a) || !isfinite(b)||!isfinite(c)) return 1;
 
-    double d = b*b - 4*a*c;
+    double d = b*b - 4*a*c; // Дискриминант
     if (d < 0) return 2;
     if (d == 0)
     {
