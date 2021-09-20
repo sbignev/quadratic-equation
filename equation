@@ -1,0 +1,183 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
+
+const double epsilon = 1.e-7;
+// ToDo: header
+enum results // ToDo: write values
+{
+    ERROR_POINTER = 0,
+    ERROR_COEF = 1,
+    NO_ROOTS = 2,
+    DOUBLE_ROOT = 3,
+    TWO_DISTINCT_ROOTS = 4,
+    EVERY_NUMBER = 5,
+    NO_SOLUTION = 6,
+    UNIQUE_SOLUTION = 7
+
+};
+//-----------------------------------------------------
+//! Solves a linear equation bx + c = 0
+//!
+//! @param [in]  b  b - coefficient
+//! @param [in]  c  c - coefficien
+//! @param [out]  x1  x1 - pointer to the root
+//!
+//! @return linear equation solution results
+//-----------------------------------------------------
+int linearEquation (const double b, const double c, double* x1);
+
+//-----------------------------------------------------
+//! Solves a linear equation ax^2 + bx + c = 0
+//!
+//! @param [in]  a  a - coefficient
+//! @param [in]  b  b - coefficient
+//! @param [in]  c  c - coefficien
+//! @param [out]  x1  x1 - pointer to the first root
+//! @param [out]  x2  x2 - pointer to the second root
+//!
+//! @return linear equation solution results
+//-----------------------------------------------------
+int solutionEquation (const double a, const double b, const double c, double *x1, double *x2);
+
+//-----------------------------------------------------
+//! Checks if a quadratic equatimg is solved. Reads data from a file.
+//-----------------------------------------------------
+void UnitTests ();
+
+int main ()
+{
+    printf ("This program solves quadratic equations of the form: ax ^ 2 + bx + c = 0 \n");
+    printf ("Enter a, b, c \n");
+
+    double a = 0, b = 0, c = 0;
+    int correctValue = scanf ("%lg %lg %lg", &a, &b, &c); // ToDo: check return value
+    if (correctValue != 3)
+    {
+        printf ("Incorrect input");
+        return 0;
+    }
+    double x1 = 0, x2 = 0;
+    UnitTests ();
+
+    int exist = solutionEquation (a, b, c, &x1, &x2);
+    switch (exist)
+    {
+        case ERROR_POINTER :
+            printf ("error while creating pointers");
+            break;
+        case ERROR_COEF:
+            printf ("incorrect data entered");
+            break;
+        case NO_ROOTS:
+            printf ("the equation has no roots ");
+            break;
+        case DOUBLE_ROOT:
+            printf ("the equation has 1 root: x1 = %lg", x1);
+            break;
+        case TWO_DISTINCT_ROOTS:
+            printf ("the equation has 2 root: x1 = %lg, x2 = %lg", x1, x2);
+            break;
+        case EVERY_NUMBER:
+            printf ("Every number is a solution");
+            break;
+        case NO_SOLUTION:
+            printf ("There is no solution");
+            break;
+        case UNIQUE_SOLUTION:
+            printf ("There is one root x1 = %lg", x1);
+            break;
+        default: printf (" Error ");
+    }
+
+    return 1;
+}
+
+int solutionEquation (const double a, const double b, const double c, double *x1, double *x2)
+{
+    if (x1 == NULL || x2 == NULL || x1 == x2) return  ERROR_POINTER;
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c)) return ERROR_COEF;
+    if (fabs(a) < epsilon) return linearEquation (b,c,x1);
+
+    double d = b*b - 4*a*c; // Дискриминант
+    if (fabs(d) < epsilon)
+    {
+        *x1 = -b/(2*a);
+        *x2 = *x1;
+        return  DOUBLE_ROOT;
+    }
+    if (d < 0) return NO_ROOTS;
+
+    if (d > 0)
+    {
+        *x1 = (-b + sqrt(d))/(2*a);
+        *x2 = (-b - sqrt(d))/(2*a);
+        return  TWO_DISTINCT_ROOTS;
+    }
+
+}
+int linearEquation (const double b, const double c, double* x1)
+{
+     double epsilon = 1.e-7;
+     if (fabs(b) < epsilon)
+     {
+         if (fabs(c) < epsilon)
+         {
+             return EVERY_NUMBER;
+         }
+         else return NO_SOLUTION;
+     }
+     *x1 = -c/b;
+     return  UNIQUE_SOLUTION;
+}
+
+void UnitTests ()
+{
+    FILE *fp = NULL;
+    char name[] = "test.txt";
+    if ((fp = fopen(name, "r")) == NULL)
+    {
+        printf("could not open file");
+        return;
+    }
+
+    double a = 0, b = 0, c = 0, x1 = 0, x2 = 0, x11 = 0, x22 = 0;
+    int result = -1, result2 = -1;
+    while (!feof(fp))
+    {
+        fscanf (fp,"%lg %lg %lg %d %lg %lg", &a, &b, &c, &result, &x1, &x2);
+        assert (isfinite(a));
+        assert (isfinite(b));
+        assert (isfinite(c));
+        assert (isfinite(x1));
+        assert (isfinite(x2));
+        result2 = solutionEquation (a,  b,  c,  &x11, &x22);
+        if (result ==  NO_SOLUTION  ||  result == EVERY_NUMBER)
+        {
+             if (result != result2) printf ("\n Error: there is result2 %d"
+                                            "\n should be: result \n", result2, result);
+        }
+        else {
+        if ( result == UNIQUE_SOLUTION)
+        {
+            if (result != result2 || fabs(x11-x1) > epsilon)
+                printf ("Error: there is x11 = %ld, result2 %d \n"
+                        "should be: x1 = %ld, result %d\n",
+                        x11, result2, x1, result);
+        }
+        else
+        {
+            if (result2 != result || (fabs(x1 - x22) > epsilon || fabs(x2 - x11) > epsilon) &&
+                                     (fabs(x1 - x11) > epsilon || fabs(x2 - x22) > epsilon))
+            {
+                 printf ("Error: there is x11 = %ld, x12 = %ld, result2 %d \n"
+                         " should be: x1 = %ld, x2 = %ld, result %d\n",
+                         x11, x22, result2, x1, x2, result);
+            }
+        }
+        }
+    }
+    fclose(fp);
+    return;
+}
